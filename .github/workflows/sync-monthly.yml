@@ -1,0 +1,22 @@
+name: Monthly Full Sync ClickBank
+
+on:
+  workflow_dispatch:  # Manual trigger only
+  schedule:
+    - cron: '0 3 1 * *'  # 1st of month at 3 AM UTC
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - run: npm install
+      - run: node sync-monthly.js
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          CLICKBANK_CLERK_KEY: ${{ secrets.CLICKBANK_CLERK_KEY }}
+          CLICKBANK_DEV_KEY: ${{ secrets.CLICKBANK_DEV_KEY }}
+          PRODUCT_ID: SPR-OB2
