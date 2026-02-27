@@ -1,22 +1,49 @@
-name: Daily Sync ClickBank
+name: Daily ClickBank Sync
 
 on:
-  workflow_dispatch:
   schedule:
-    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+    # Runs every day at 06:00 UTC — adjust to your preferred morning time
+    - cron: '0 6 * * *'
+
+  # Allow manual trigger from GitHub UI (useful for backfilling a specific date)
+  workflow_dispatch:
+    inputs:
+      target_date:
+        description: 'Date to sync (YYYY-MM-DD). Leave empty to sync yesterday.'
+        required: false
+        default: ''
 
 jobs:
   sync:
+    name: Sync Orders
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
-      - run: npm install
-      - run: node sync-daily.js
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run daily sync
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           CLICKBANK_CLERK_KEY: ${{ secrets.CLICKBANK_CLERK_KEY }}
           CLICKBANK_DEV_KEY: ${{ secrets.CLICKBANK_DEV_KEY }}
-          PRODUCT_ID: SPR-OB2
+          CLICKBANK_VENDOR: ${{ secrets.CLICKBANK_VENDOR }}
+          PRODUCT_ID: ${{ secrets.PRODUCT_ID }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -n "${{ github.event.inputs.target_date }}" ]; then
+            echo "Syncing specific date: ${{ github.event.inputs.target_date }}"
+            node sync-daily.js ${{ github.event.inputs.target_date }}
+          else
+            echo "Syncing yesterday's orders"
+            node sync-daily.js
