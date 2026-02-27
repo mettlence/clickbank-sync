@@ -47,3 +47,4 @@ jobs:
           else
             echo "Syncing yesterday's orders"
             node sync-daily.js
+          fi
