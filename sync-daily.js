@@ -237,7 +237,7 @@ function transformOrder(order, lineItem) {
     customerId: order.email,
     customerEmail: order.email,
     transactionType: order.transactionType,
-    amount: parseNum(lineItem.customerAmount, 0),
+    amount: parseNum(lineItem.accountAmount, 0),
     currency: order.currency,
     orderDate: parseDate(order.transactionTime) || new Date(),
     subscriptionStatus: isRecurring ? status : null,
